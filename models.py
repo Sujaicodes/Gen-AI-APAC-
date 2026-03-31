@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
 Base = declarative_base()
-engine = create_engine("sqlite:///:memory:", echo=True)
+engine = create_engine("sqlite:///task_manager.db", echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Task(Base):
