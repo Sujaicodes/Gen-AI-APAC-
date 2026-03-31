@@ -4,21 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Agent Task Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .nav { margin-bottom: 20px; }
-        .nav a { margin-right: 20px; text-decoration: none; padding: 10px; background: #f0f0f0; border-radius: 5px; }
-        .nav a:hover { background: #e0e0e0; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            font-weight: 300;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .nav-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .nav-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .nav-card h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .nav-card p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+
+        .nav-card a {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-card a:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .features {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 60px 40px;
+            margin-top: 60px;
+            text-align: center;
+        }
+
+        .features h2 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .feature-item h4 {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .feature-item p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Multi-Agent Task Manager</h1>
-    <div class="nav">
-        <a href="/chat">Chat</a>
-        <a href="/database">Database</a>
-        <a href="/architecture">Architecture</a>
+    <div class="container">
+        <div class="hero">
+            <h1>🤖 Multi-Agent Task Manager</h1>
+            <p>Intelligent coordination between agents, tools, and data for seamless task management</p>
+        </div>
+
+        <div class="nav-grid">
+            <div class="nav-card">
+                <h3>💬 Chat Interface</h3>
+                <p>Interact with AI agents for task management and workflow execution</p>
+                <a href="/chat">Start Chat</a>
+            </div>
+            <div class="nav-card">
+                <h3>🗄️ Database View</h3>
+                <p>Live browser for tasks, events, and notes with real-time updates</p>
+                <a href="/database">View Database</a>
+            </div>
+            <div class="nav-card">
+                <h3>🏗️ System Architecture</h3>
+                <p>Visual diagram of the multi-agent system and workflow components</p>
+                <a href="/architecture">View Architecture</a>
+            </div>
+        </div>
+
+        <div class="features">
+            <h2>🚀 Core Features</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h4>Multi-Agent Coordination</h4>
+                    <p>Primary agent orchestrates specialized sub-agents for complex workflows</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Real-Time Status</h4>
+                    <p>Live agent status bar with pulsing indicators for active agents</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Tool Integration</h4>
+                    <p>MCP protocol integration with Calendar, Task, Notes, and Search tools</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Persistent Storage</h4>
+                    <p>SQLite database maintains tasks, events, and notes across sessions</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <p>Welcome to the Multi-Agent Task Manager. Use the navigation above to access different views.</p>
+
     <script>
         // Defensive JavaScript to handle potential MGT conflicts
         if (typeof mgt !== 'undefined' && mgt.clearMarks) {
