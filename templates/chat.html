@@ -37,7 +37,7 @@
     <button onclick="sendMessage()">Send</button>
     
     <script>
-        const ws = new WebSocket('ws://localhost:8000/ws/chat');
+        const ws = new WebSocket('ws://localhost:8001/ws/chat');
         const chatContainer = document.getElementById('chat-container');
         const messageInput = document.getElementById('message-input');
         const activeAgentsSpan = document.getElementById('active-agents');
