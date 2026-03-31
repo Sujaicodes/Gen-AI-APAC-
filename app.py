@@ -66,9 +66,18 @@ async def architecture_view(request: Request):
 async def chat_websocket(websocket: WebSocket):
     await websocket.accept()
     try:
+        # Send initial status
+        await websocket.send_json({"type": "status", "active_agents": []})
+        
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
+            
+            if message.get("type") == "status_request":
+                # Send current status
+                await websocket.send_json({"type": "status", "active_agents": []})
+                continue
+            
             user_input = message.get("message", "")
             
             # Send agent status

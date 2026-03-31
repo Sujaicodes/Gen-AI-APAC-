@@ -51,6 +51,12 @@
         const messageInput = document.getElementById('message-input');
         const activeAgentsSpan = document.getElementById('active-agents');
         
+        ws.onopen = function() {
+            console.log('WebSocket connected');
+            // Send initial status request
+            ws.send(JSON.stringify({type: 'status_request'}));
+        };
+        
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
             if (data.type === 'status') {
