@@ -37,7 +37,16 @@
     <button onclick="sendMessage()">Send</button>
     
     <script>
-        const ws = new WebSocket('ws://localhost:8001/ws/chat');
+        // Defensive JavaScript to handle potential MGT conflicts
+        if (typeof mgt !== 'undefined' && mgt.clearMarks) {
+            try {
+                mgt.clearMarks();
+            } catch (e) {
+                console.warn('MGT clearMarks error handled:', e);
+            }
+        }
+        
+        const ws = new WebSocket('ws://localhost:8004/ws/chat');
         const chatContainer = document.getElementById('chat-container');
         const messageInput = document.getElementById('message-input');
         const activeAgentsSpan = document.getElementById('active-agents');
@@ -53,6 +62,15 @@
             } else if (data.type === 'error') {
                 addMessage('Error', data.content);
             }
+        };
+        
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            addMessage('Error', 'Connection lost. Please refresh the page.');
+        };
+        
+        ws.onclose = function() {
+            console.log('WebSocket connection closed');
         };
         
         function updateAgentStatus(agents) {
@@ -92,6 +110,21 @@
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
+            }
+        });
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
+            }
+            // Clean up any potential MGT references
+            if (typeof mgt !== 'undefined' && mgt.clearMarks) {
+                try {
+                    mgt.clearMarks();
+                } catch (e) {
+                    // Silently handle cleanup errors
+                }
             }
         });
     </script>

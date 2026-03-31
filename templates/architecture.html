@@ -63,5 +63,15 @@
         <li><strong>Schedule Team Sync:</strong> Calendar + Task + Notes for meeting coordination</li>
         <li><strong>What's On My Plate?:</strong> Search + Task + Calendar for daily overview</li>
     </ul>
+    <script>
+        // Defensive JavaScript to handle potential MGT conflicts
+        if (typeof mgt !== 'undefined' && mgt.clearMarks) {
+            try {
+                mgt.clearMarks();
+            } catch (e) {
+                console.warn('MGT clearMarks error handled:', e);
+            }
+        }
+    </script>
 </body>
 </html>

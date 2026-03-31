@@ -19,5 +19,15 @@
         <a href="/architecture">Architecture</a>
     </div>
     <p>Welcome to the Multi-Agent Task Manager. Use the navigation above to access different views.</p>
+    <script>
+        // Defensive JavaScript to handle potential MGT conflicts
+        if (typeof mgt !== 'undefined' && mgt.clearMarks) {
+            try {
+                mgt.clearMarks();
+            } catch (e) {
+                console.warn('MGT clearMarks error handled:', e);
+            }
+        }
+    </script>
 </body>
 </html>
