@@ -3,5 +3,5 @@ from typing import Any, List
 
 class BaseTool(ABC):
     @abstractmethod
-    async def execute(self, **kwargs) -> Any:
+    async def execute(self, action: str, **kwargs) -> Any:
         pass
