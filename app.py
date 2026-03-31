@@ -14,8 +14,9 @@ app = FastAPI(title="Multi-Agent Task Manager")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="/workspaces/Gen-AI-APAC-/templates")
 
-# Initialize database
+
 init_db()
+
 
 # Global agent instance
 primary_agent = PrimaryAgent()
@@ -53,6 +54,7 @@ async def database_view(request: Request):
         return HTMLResponse(html)
     finally:
         db.close()
+
 
 @app.get("/architecture", response_class=HTMLResponse)
 async def architecture_view(request: Request):

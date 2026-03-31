@@ -1,7 +1,9 @@
 fastapi
 uvicorn
+aiosqlite
+websockets
 sqlalchemy
 pydantic
 jinja2
-aiosqlite
-websockets
+mysql
+firebase
