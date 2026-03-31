@@ -55,10 +55,6 @@ async def database_view(request: Request):
         return HTMLResponse(html)
     finally:
         db.close()
-    for note in notes:
-        html += f"<li>{note.title} - {note.content[:50]}... - Tags: {note.tags}</li>"
-    html += "</ul>"
-    return HTMLResponse(html)
 
 @app.get("/architecture", response_class=HTMLResponse)
 async def architecture_view(request: Request):
