@@ -106,8 +106,6 @@ class PrimaryAgent:
         deadline_str = "2024-12-31"  # Default, should parse from input
         deadline = datetime.strptime(deadline_str, "%Y-%m-%d")
         
-        db = get_db()
-        
         # Create main task
         task = await self.tools["task"].execute("create_task", title="Complete Proposal", description="Prepare and submit the proposal by deadline", priority="high", due_date=deadline)
         if websocket:
@@ -131,8 +129,6 @@ class PrimaryAgent:
         note = await self.tools["notes"].execute("create_note", title="Proposal Checklist", content=checklist, tags="proposal,deadline")
         if websocket:
             await websocket.send_json({"type": "tool_call", "tool": "Notes", "action": "create_note", "result": {"title": note.title, "id": note.id}})
-        
-        db.commit()
         
         response = "✅ Proposal deadline workflow completed!\n\n"
         response += f"📋 Created task: {task.title}\n"
