@@ -20,51 +20,66 @@ class TaskTool(BaseTool):
 
     async def _create_task(self, title: str, description: str = "", priority: str = "medium", due_date: datetime = None) -> Task:
         db = get_db()
-        task = Task(
-            title=title,
-            description=description,
-            priority=priority,
-            status="pending",
-            due_date=due_date
-        )
-        db.add(task)
-        db.commit()
-        db.refresh(task)
-        return task
+        try:
+            task = Task(
+                title=title,
+                description=description,
+                priority=priority,
+                status="pending",
+                due_date=due_date
+            )
+            db.add(task)
+            db.commit()
+            db.refresh(task)
+            return task
+        finally:
+            db.close()
 
     async def _get_tasks(self, status: str = None, priority: str = None) -> List[Task]:
         db = get_db()
-        query = db.query(Task)
-        if status:
-            query = query.filter(Task.status == status)
-        if priority:
-            query = query.filter(Task.priority == priority)
-        return query.all()
+        try:
+            query = db.query(Task)
+            if status:
+                query = query.filter(Task.status == status)
+            if priority:
+                query = query.filter(Task.priority == priority)
+            return query.all()
+        finally:
+            db.close()
 
     async def _update_task(self, task_id: int, **updates) -> Task:
         db = get_db()
-        task = db.query(Task).filter(Task.id == task_id).first()
-        if task:
-            for key, value in updates.items():
-                setattr(task, key, value)
-            task.updated_at = datetime.utcnow()
-            db.commit()
-            db.refresh(task)
-        return task
+        try:
+            task = db.query(Task).filter(Task.id == task_id).first()
+            if task:
+                for key, value in updates.items():
+                    setattr(task, key, value)
+                task.updated_at = datetime.utcnow()
+                db.commit()
+                db.refresh(task)
+            return task
+        finally:
+            db.close()
 
     async def _delete_task(self, task_id: int) -> bool:
         db = get_db()
-        task = db.query(Task).filter(Task.id == task_id).first()
-        if task:
-            db.delete(task)
-            db.commit()
-            return True
-        return False
+        try:
+            task = db.query(Task).filter(Task.id == task_id).first()
+            if task:
+                db.delete(task)
+                db.commit()
+                return True
+            return False
+        finally:
+            db.close()
 
     async def _prioritize_tasks(self, tasks=None) -> List[Task]:
         if tasks is None:
             db = get_db()
-            tasks = db.query(Task).filter(Task.status != "completed").all()
+            try:
+                tasks = db.query(Task).filter(Task.status != "completed").all()
+            finally:
+                db.close()
         
         # Simple prioritization: high > medium > low, then by due date
         priority_order = {"high": 3, "medium": 2, "low": 1}
