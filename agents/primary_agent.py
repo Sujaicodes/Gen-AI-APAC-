@@ -56,44 +56,46 @@ class PrimaryAgent:
             await websocket.send_json({"type": "status", "active_agents": self.active_agents})
 
         db = get_db()
-        
-        # Get current week
-        today = datetime.now()
-        week_start = today - timedelta(days=today.weekday())
-        week_end = week_start + timedelta(days=6)
-        
-        # Gather data
-        tasks = db.query(Task).filter(Task.due_date.between(week_start, week_end)).all()
-        events = db.query(Event).filter(Event.start_time.between(week_start, week_end)).all()
-        notes = db.query(Note).filter(Note.created_at.between(week_start, week_end)).all()
-        
-        # Process with tools
-        search_results = await self.tools["search"].execute("search_weekly_data", tasks=tasks, events=events, notes=notes)
-        if websocket:
-            await websocket.send_json({"type": "tool_call", "tool": "Search", "action": "search_weekly_data", "result": search_results})
-        
-        prioritized_tasks = await self.tools["task"].execute("prioritize_tasks", tasks=tasks)
-        if websocket:
-            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "prioritize_tasks", "result": [t.title for t in prioritized_tasks[:5]]})
-        
-        response = f"## Weekly Brief ({week_start.strftime('%B %d')} - {week_end.strftime('%B %d')})\n\n"
-        response += "### Top Priorities:\n"
-        for task in prioritized_tasks[:5]:
-            response += f"- {task.title} (Priority: {task.priority}, Due: {task.due_date.strftime('%m/%d')})\n"
-        
-        response += "\n### Upcoming Events:\n"
-        for event in events:
-            response += f"- {event.title} at {event.start_time.strftime('%m/%d %H:%M')}\n"
-        
-        response += "\n### Relevant Notes:\n"
-        for note in notes[:3]:
-            response += f"- {note.title}\n"
-        
-        self.active_agents = ["Primary"]
-        if websocket:
-            await websocket.send_json({"type": "status", "active_agents": self.active_agents})
-        
-        return response
+        try:
+            # Get current week
+            today = datetime.now()
+            week_start = today - timedelta(days=today.weekday())
+            week_end = week_start + timedelta(days=6)
+            
+            # Gather data
+            tasks = db.query(Task).filter(Task.due_date.between(week_start, week_end)).all()
+            events = db.query(Event).filter(Event.start_time.between(week_start, week_end)).all()
+            notes = db.query(Note).filter(Note.created_at.between(week_start, week_end)).all()
+            
+            # Process with tools
+            search_results = await self.tools["search"].execute("search_weekly_data", tasks=tasks, events=events, notes=notes)
+            if websocket:
+                await websocket.send_json({"type": "tool_call", "tool": "Search", "action": "search_weekly_data", "result": search_results})
+            
+            prioritized_tasks = await self.tools["task"].execute("prioritize_tasks", tasks=tasks)
+            if websocket:
+                await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "prioritize_tasks", "result": [t.title for t in prioritized_tasks[:5]]})
+            
+            response = f"## Weekly Brief ({week_start.strftime('%B %d')} - {week_end.strftime('%B %d')})\n\n"
+            response += "### Top Priorities:\n"
+            for task in prioritized_tasks[:5]:
+                response += f"- {task.title} (Priority: {task.priority}, Due: {task.due_date.strftime('%m/%d')})\n"
+            
+            response += "\n### Upcoming Events:\n"
+            for event in events:
+                response += f"- {event.title} at {event.start_time.strftime('%m/%d %H:%M')}\n"
+            
+            response += "\n### Relevant Notes:\n"
+            for note in notes[:3]:
+                response += f"- {note.title}\n"
+            
+            self.active_agents = ["Primary"]
+            if websocket:
+                await websocket.send_json({"type": "status", "active_agents": self.active_agents})
+            
+            return response
+        finally:
+            db.close()
 
     async def _proposal_deadline(self, user_input: str, websocket=None) -> str:
         self.active_agents = ["Primary", "Task", "Calendar", "Notes"]
