@@ -35,7 +35,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-3. Open http://localhost:8000 in your browser
+3. Open http://localhost:8002 in your browser
 
 ## Usage
 

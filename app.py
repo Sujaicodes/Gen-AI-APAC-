@@ -38,8 +38,19 @@ async def database_view(request: Request):
     tasks = db.query(Task).all()
     events = db.query(Event).all()
     notes = db.query(Note).all()
-    # For simplicity, since templates are broken, return a simple HTML
-    html = "<h1>Database</h1><p>Tasks: " + str(len(tasks)) + "</p><p>Events: " + str(len(events)) + "</p><p>Notes: " + str(len(notes)) + "</p>"
+    html = "<h1>Database - Multi-Agent Task Manager</h1>"
+    html += "<h2>Tasks</h2><ul>"
+    for task in tasks:
+        html += f"<li>{task.title} - {task.priority} - {task.status} - Due: {task.due_date.strftime('%Y-%m-%d') if task.due_date else 'N/A'}</li>"
+    html += "</ul>"
+    html += "<h2>Events</h2><ul>"
+    for event in events:
+        html += f"<li>{event.title} - {event.start_time.strftime('%Y-%m-%d %H:%M')} to {event.end_time.strftime('%Y-%m-%d %H:%M')}</li>"
+    html += "</ul>"
+    html += "<h2>Notes</h2><ul>"
+    for note in notes:
+        html += f"<li>{note.title} - {note.content[:50]}... - Tags: {note.tags}</li>"
+    html += "</ul>"
     return HTMLResponse(html)
 
 @app.get("/architecture", response_class=HTMLResponse)
