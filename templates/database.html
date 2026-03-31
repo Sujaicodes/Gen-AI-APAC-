@@ -274,8 +274,8 @@
                 <div class="label">Saved Notes</div>
             </div>
             <div class="stat-card">
-                <div class="number">{{ tasks|selectattr('status', 'equalto', 'completed')|list|length }}</div>
-                <div class="label">Completed Tasks</div>
+                <div class="number">{{ tasks|length }}</div>
+                <div class="label">Total Tasks</div>
             </div>
         </div>
 
