@@ -20,46 +20,61 @@ class NotesTool(BaseTool):
 
     async def _create_note(self, title: str, content: str, tags: str = "") -> Note:
         db = get_db()
-        note = Note(
-            title=title,
-            content=content,
-            tags=tags
-        )
-        db.add(note)
-        db.commit()
-        db.refresh(note)
-        return note
+        try:
+            note = Note(
+                title=title,
+                content=content,
+                tags=tags
+            )
+            db.add(note)
+            db.commit()
+            db.refresh(note)
+            return note
+        finally:
+            db.close()
 
     async def _get_notes(self, tag: str = None) -> List[Note]:
         db = get_db()
-        query = db.query(Note)
-        if tag:
-            query = query.filter(Note.tags.contains(tag))
-        return query.all()
+        try:
+            query = db.query(Note)
+            if tag:
+                query = query.filter(Note.tags.contains(tag))
+            return query.all()
+        finally:
+            db.close()
 
     async def _update_note(self, note_id: int, **updates) -> Note:
         db = get_db()
-        note = db.query(Note).filter(Note.id == note_id).first()
-        if note:
-            for key, value in updates.items():
-                setattr(note, key, value)
-            note.updated_at = datetime.utcnow()
-            db.commit()
-            db.refresh(note)
-        return note
+        try:
+            note = db.query(Note).filter(Note.id == note_id).first()
+            if note:
+                for key, value in updates.items():
+                    setattr(note, key, value)
+                note.updated_at = datetime.utcnow()
+                db.commit()
+                db.refresh(note)
+            return note
+        finally:
+            db.close()
 
     async def _delete_note(self, note_id: int) -> bool:
         db = get_db()
-        note = db.query(Note).filter(Note.id == note_id).first()
-        if note:
-            db.delete(note)
-            db.commit()
-            return True
-        return False
+        try:
+            note = db.query(Note).filter(Note.id == note_id).first()
+            if note:
+                db.delete(note)
+                db.commit()
+                return True
+            return False
+        finally:
+            db.close()
 
     async def _search_notes(self, query: str) -> List[Note]:
         db = get_db()
-        notes = db.query(Note).filter(
-            (Note.title.contains(query)) | (Note.content.contains(query)) | (Note.tags.contains(query))
-        ).all()
-        return notes
+        try:
+            notes = db.query(Note).filter(
+                (Note.title.contains(query)) | (Note.content.contains(query)) | (Note.tags.contains(query))
+            ).all()
+            return notes
+        finally:
+            db.close()

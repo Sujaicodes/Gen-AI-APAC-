@@ -35,19 +35,26 @@ async def chat_view(request: Request):
 @app.get("/database", response_class=HTMLResponse)
 async def database_view(request: Request):
     db = get_db()
-    tasks = db.query(Task).all()
-    events = db.query(Event).all()
-    notes = db.query(Note).all()
-    html = "<h1>Database - Multi-Agent Task Manager</h1>"
-    html += "<h2>Tasks</h2><ul>"
-    for task in tasks:
-        html += f"<li>{task.title} - {task.priority} - {task.status} - Due: {task.due_date.strftime('%Y-%m-%d') if task.due_date else 'N/A'}</li>"
-    html += "</ul>"
-    html += "<h2>Events</h2><ul>"
-    for event in events:
-        html += f"<li>{event.title} - {event.start_time.strftime('%Y-%m-%d %H:%M')} to {event.end_time.strftime('%Y-%m-%d %H:%M')}</li>"
-    html += "</ul>"
-    html += "<h2>Notes</h2><ul>"
+    try:
+        tasks = db.query(Task).all()
+        events = db.query(Event).all()
+        notes = db.query(Note).all()
+        html = "<h1>Database - Multi-Agent Task Manager</h1>"
+        html += "<h2>Tasks</h2><ul>"
+        for task in tasks:
+            html += f"<li>{task.title} - {task.priority} - {task.status} - Due: {task.due_date.strftime('%Y-%m-%d') if task.due_date else 'N/A'}</li>"
+        html += "</ul>"
+        html += "<h2>Events</h2><ul>"
+        for event in events:
+            html += f"<li>{event.title} - {event.start_time.strftime('%Y-%m-%d %H:%M')} to {event.end_time.strftime('%Y-%m-%d %H:%M')}</li>"
+        html += "</ul>"
+        html += "<h2>Notes</h2><ul>"
+        for note in notes:
+            html += f"<li>{note.title} - {note.content[:50]}... - Tags: {note.tags}</li>"
+        html += "</ul>"
+        return HTMLResponse(html)
+    finally:
+        db.close()
     for note in notes:
         html += f"<li>{note.title} - {note.content[:50]}... - Tags: {note.tags}</li>"
     html += "</ul>"
