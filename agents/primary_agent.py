@@ -150,8 +150,6 @@ class PrimaryAgent:
         meeting_title = "Team Sync"
         meeting_time = datetime.now() + timedelta(days=1, hours=10)  # Tomorrow 10 AM
         
-        db = get_db()
-        
         # Book meeting
         event = await self.tools["calendar"].execute("create_event", title=meeting_title, description="Weekly team synchronization meeting", start_time=meeting_time, end_time=meeting_time + timedelta(hours=1))
         if websocket:
@@ -173,8 +171,6 @@ class PrimaryAgent:
         if websocket:
             await websocket.send_json({"type": "tool_call", "tool": "Notes", "action": "create_note", "result": {"title": note.title, "id": note.id}})
         
-        db.commit()
-        
         response = "✅ Team sync scheduled!\n\n"
         response += f"🗓️ Meeting: {event.title} at {event.start_time.strftime('%m/%d %H:%M')}\n"
         response += f"📋 Task: {task.title}\n"
@@ -192,43 +188,46 @@ class PrimaryAgent:
             await websocket.send_json({"type": "status", "active_agents": self.active_agents})
 
         db = get_db()
-        today = datetime.now()
-        
-        # Get overdue tasks
-        overdue_tasks = db.query(Task).filter(Task.due_date < today, Task.status != "completed").all()
-        if websocket:
-            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "get_overdue_tasks", "result": len(overdue_tasks)})
-        
-        # Get today's events
-        today_events = db.query(Event).filter(
-            Event.start_time >= today.replace(hour=0, minute=0, second=0),
-            Event.start_time < today.replace(hour=23, minute=59, second=59)
-        ).all()
-        if websocket:
-            await websocket.send_json({"type": "tool_call", "tool": "Calendar", "action": "get_today_events", "result": len(today_events)})
-        
-        # Get top priorities
-        all_tasks = db.query(Task).filter(Task.status != "completed").order_by(Task.priority.desc()).limit(3).all()
-        if websocket:
-            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "get_top_priorities", "result": [t.title for t in all_tasks]})
-        
-        response = f"## Daily Brief ({today.strftime('%B %d, %Y')})\n\n"
-        
-        if overdue_tasks:
-            response += "### Overdue Items:\n"
-            for task in overdue_tasks:
-                response += f"- {task.title} (Due: {task.due_date.strftime('%m/%d')})\n"
-        
-        response += "\n### Today's Events:\n"
-        for event in today_events:
-            response += f"- {event.title} at {event.start_time.strftime('%H:%M')}\n"
-        
-        response += "\n### Top 3 Priorities:\n"
-        for i, task in enumerate(all_tasks, 1):
-            response += f"{i}. {task.title} (Priority: {task.priority})\n"
-        
-        self.active_agents = ["Primary"]
-        if websocket:
-            await websocket.send_json({"type": "status", "active_agents": self.active_agents})
-        
-        return response
+        try:
+            today = datetime.now()
+            
+            # Get overdue tasks
+            overdue_tasks = db.query(Task).filter(Task.due_date < today, Task.status != "completed").all()
+            if websocket:
+                await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "get_overdue_tasks", "result": len(overdue_tasks)})
+            
+            # Get today's events
+            today_events = db.query(Event).filter(
+                Event.start_time >= today.replace(hour=0, minute=0, second=0),
+                Event.start_time < today.replace(hour=23, minute=59, second=59)
+            ).all()
+            if websocket:
+                await websocket.send_json({"type": "tool_call", "tool": "Calendar", "action": "get_today_events", "result": len(today_events)})
+            
+            # Get top priorities
+            all_tasks = db.query(Task).filter(Task.status != "completed").order_by(Task.priority.desc()).limit(3).all()
+            if websocket:
+                await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "get_top_priorities", "result": [t.title for t in all_tasks]})
+            
+            response = f"## Daily Brief ({today.strftime('%B %d, %Y')})\n\n"
+            
+            if overdue_tasks:
+                response += "### Overdue Items:\n"
+                for task in overdue_tasks:
+                    response += f"- {task.title} (Due: {task.due_date.strftime('%m/%d')})\n"
+            
+            response += "\n### Today's Events:\n"
+            for event in today_events:
+                response += f"- {event.title} at {event.start_time.strftime('%H:%M')}\n"
+            
+            response += "\n### Top 3 Priorities:\n"
+            for i, task in enumerate(all_tasks, 1):
+                response += f"{i}. {task.title} (Priority: {task.priority})\n"
+            
+            self.active_agents = ["Primary"]
+            if websocket:
+                await websocket.send_json({"type": "status", "active_agents": self.active_agents})
+            
+            return response
+        finally:
+            db.close()
