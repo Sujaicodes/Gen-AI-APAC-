@@ -69,7 +69,12 @@ class PrimaryAgent:
         
         # Process with tools
         search_results = await self.tools["search"].execute("search_weekly_data", tasks=tasks, events=events, notes=notes)
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Search", "action": "search_weekly_data", "result": search_results})
+        
         prioritized_tasks = await self.tools["task"].execute("prioritize_tasks", tasks=tasks)
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "prioritize_tasks", "result": [t.title for t in prioritized_tasks[:5]]})
         
         response = f"## Weekly Brief ({week_start.strftime('%B %d')} - {week_end.strftime('%B %d')})\n\n"
         response += "### Top Priorities:\n"
@@ -102,24 +107,15 @@ class PrimaryAgent:
         db = get_db()
         
         # Create main task
-        task = Task(
-            title="Complete Proposal",
-            description="Prepare and submit the proposal by deadline",
-            priority="high",
-            status="pending",
-            due_date=deadline
-        )
-        db.add(task)
+        task = await self.tools["task"].execute("create_task", title="Complete Proposal", description="Prepare and submit the proposal by deadline", priority="high", due_date=deadline)
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "create_task", "result": {"title": task.title, "id": task.id}})
         
         # Block focus time
         focus_start = deadline - timedelta(days=2)
-        event = Event(
-            title="Proposal Focus Time",
-            description="Dedicated time to work on proposal",
-            start_time=focus_start,
-            end_time=focus_start + timedelta(hours=4)
-        )
-        db.add(event)
+        event = await self.tools["calendar"].execute("create_event", title="Proposal Focus Time", description="Dedicated time to work on proposal", start_time=focus_start, end_time=focus_start + timedelta(hours=4))
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Calendar", "action": "create_event", "result": {"title": event.title, "id": event.id}})
         
         # Create checklist note
         checklist = """Proposal Preparation Checklist:
@@ -130,12 +126,10 @@ class PrimaryAgent:
 - Final edits
 - Submit"""
         
-        note = Note(
-            title="Proposal Checklist",
-            content=checklist,
-            tags="proposal,deadline"
-        )
-        db.add(note)
+        note = await self.tools["notes"].execute("create_note", title="Proposal Checklist", content=checklist, tags="proposal,deadline")
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Notes", "action": "create_note", "result": {"title": note.title, "id": note.id}})
+        
         db.commit()
         
         response = "✅ Proposal deadline workflow completed!\n\n"
@@ -161,23 +155,14 @@ class PrimaryAgent:
         db = get_db()
         
         # Book meeting
-        event = Event(
-            title=meeting_title,
-            description="Weekly team synchronization meeting",
-            start_time=meeting_time,
-            end_time=meeting_time + timedelta(hours=1)
-        )
-        db.add(event)
+        event = await self.tools["calendar"].execute("create_event", title=meeting_title, description="Weekly team synchronization meeting", start_time=meeting_time, end_time=meeting_time + timedelta(hours=1))
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Calendar", "action": "create_event", "result": {"title": event.title, "id": event.id}})
         
         # Create agenda task
-        task = Task(
-            title="Prepare Team Sync Agenda",
-            description="Prepare agenda items for the team sync meeting",
-            priority="medium",
-            status="pending",
-            due_date=meeting_time - timedelta(hours=2)
-        )
-        db.add(task)
+        task = await self.tools["task"].execute("create_task", title="Prepare Team Sync Agenda", description="Prepare agenda items for the team sync meeting", priority="medium", due_date=meeting_time - timedelta(hours=2))
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "create_task", "result": {"title": task.title, "id": task.id}})
         
         # Save agenda note
         agenda = """Team Sync Agenda:
@@ -186,12 +171,10 @@ class PrimaryAgent:
 - Next steps
 - Q&A"""
         
-        note = Note(
-            title="Team Sync Agenda",
-            content=agenda,
-            tags="meeting,agenda"
-        )
-        db.add(note)
+        note = await self.tools["notes"].execute("create_note", title="Team Sync Agenda", content=agenda, tags="meeting,agenda")
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Notes", "action": "create_note", "result": {"title": note.title, "id": note.id}})
+        
         db.commit()
         
         response = "✅ Team sync scheduled!\n\n"
@@ -215,15 +198,21 @@ class PrimaryAgent:
         
         # Get overdue tasks
         overdue_tasks = db.query(Task).filter(Task.due_date < today, Task.status != "completed").all()
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "get_overdue_tasks", "result": len(overdue_tasks)})
         
         # Get today's events
         today_events = db.query(Event).filter(
             Event.start_time >= today.replace(hour=0, minute=0, second=0),
             Event.start_time < today.replace(hour=23, minute=59, second=59)
         ).all()
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Calendar", "action": "get_today_events", "result": len(today_events)})
         
         # Get top priorities
         all_tasks = db.query(Task).filter(Task.status != "completed").order_by(Task.priority.desc()).limit(3).all()
+        if websocket:
+            await websocket.send_json({"type": "tool_call", "tool": "Task", "action": "get_top_priorities", "result": [t.title for t in all_tasks]})
         
         response = f"## Daily Brief ({today.strftime('%B %d, %Y')})\n\n"
         
