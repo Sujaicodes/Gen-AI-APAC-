@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Multi-Agent Task Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 20px; text-decoration: none; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        .nav a:hover { background: #e0e0e0; }
+        #chat-container { border: 1px solid #ccc; height: 400px; overflow-y: auto; padding: 10px; margin-bottom: 10px; }
+        #message-input { width: 80%; padding: 10px; }
+        button { padding: 10px 20px; }
+        .status-bar { margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 5px; }
+        .agent-status { display: inline-block; margin-right: 10px; padding: 5px 10px; background: #e0e0e0; border-radius: 15px; }
+        .agent-active { background: #4CAF50; color: white; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .tool-call { margin: 5px 0; padding: 5px; background: #f0f8ff; border-left: 3px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Chat - Multi-Agent Task Manager</h1>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/database">Database</a>
+        <a href="/architecture">Architecture</a>
+    </div>
+    
+    <div id="status-bar" class="status-bar">
+        Active Agents: <span id="active-agents">None</span>
+    </div>
+    
+    <div id="chat-container"></div>
+    
+    <input type="text" id="message-input" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+    
+    <script>
+        const ws = new WebSocket('ws://localhost:8000/ws/chat');
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const activeAgentsSpan = document.getElementById('active-agents');
+        
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'status') {
+                updateAgentStatus(data.active_agents);
+            } else if (data.type === 'response') {
+                addMessage('Assistant', data.content);
+            } else if (data.type === 'tool_call') {
+                addToolCall(data.tool, data.action, data.result);
+            } else if (data.type === 'error') {
+                addMessage('Error', data.content);
+            }
+        };
+        
+        function updateAgentStatus(agents) {
+            activeAgentsSpan.innerHTML = '';
+            agents.forEach(agent => {
+                const span = document.createElement('span');
+                span.className = 'agent-status agent-active';
+                span.textContent = agent;
+                activeAgentsSpan.appendChild(span);
+            });
+        }
+        
+        function addMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.innerHTML = `<strong>${sender}:</strong> ${content.replace(/\n/g, '<br>')}`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function addToolCall(tool, action, result) {
+            const toolDiv = document.createElement('div');
+            toolDiv.className = 'tool-call';
+            toolDiv.innerHTML = `<em>Tool: ${tool} - ${action}</em><br>Result: ${JSON.stringify(result)}`;
+            chatContainer.appendChild(toolDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message) {
+                addMessage('You', message);
+                ws.send(JSON.stringify({message: message}));
+                messageInput.value = '';
+            }
+        }
+        
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

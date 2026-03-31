@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - Multi-Agent Task Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 20px; text-decoration: none; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        .nav a:hover { background: #e0e0e0; }
+        .diagram-container { text-align: center; margin: 20px 0; }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <h1>Architecture - Multi-Agent Task Manager</h1>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/chat">Chat</a>
+        <a href="/database">Database</a>
+    </div>
+    
+    <div class="diagram-container">
+        <div class="mermaid">
+            graph TD
+                A[User] --> B[FastAPI Server]
+                B --> C[Primary Agent]
+                C --> D[Sub-Agents]
+                D --> E[Calendar Tool]
+                D --> F[Task Tool]
+                D --> G[Notes Tool]
+                D --> H[Search Tool]
+                E --> I[MCP Protocol]
+                F --> I
+                G --> I
+                H --> I
+                I --> J[Database]
+                C --> K[WebSocket]
+                K --> L[Real-time UI]
+                B --> M[REST API]
+                M --> N[Database View]
+        </div>
+    </div>
+    
+    <h2>System Components</h2>
+    <ul>
+        <li><strong>Primary Agent:</strong> Coordinates sub-agents and manages workflows</li>
+        <li><strong>Sub-Agents:</strong> Specialized agents for specific tasks (Search, Task, Calendar, Notes)</li>
+        <li><strong>Tools:</strong> MCP-integrated tools for calendar, task management, notes, and search</li>
+        <li><strong>Database:</strong> SQLite database for persistent storage of tasks, events, and notes</li>
+        <li><strong>API:</strong> FastAPI-based REST API and WebSocket for real-time communication</li>
+        <li><strong>UI:</strong> Web interface with Chat, Database, and Architecture views</li>
+    </ul>
+    
+    <h2>Workflows</h2>
+    <ul>
+        <li><strong>Plan My Week:</strong> Search + Task + Calendar + Notes for weekly brief</li>
+        <li><strong>Proposal Deadline:</strong> Task + Calendar + Notes for deadline management</li>
+        <li><strong>Schedule Team Sync:</strong> Calendar + Task + Notes for meeting coordination</li>
+        <li><strong>What's On My Plate?:</strong> Search + Task + Calendar for daily overview</li>
+    </ul>
+</body>
+</html>

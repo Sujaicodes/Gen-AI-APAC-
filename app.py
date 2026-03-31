@@ -1,0 +1,78 @@
+from fastapi import FastAPI, Request, WebSocket
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import asyncio
+import json
+from typing import List, Dict, Any
+from database import init_db, get_db
+from agents.primary_agent import PrimaryAgent
+from models import Task, Event, Note
+
+app = FastAPI(title="Multi-Agent Task Manager")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+# Initialize database
+init_db()
+
+# Global agent instance
+primary_agent = PrimaryAgent()
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_view(request: Request):
+    return templates.TemplateResponse("chat.html", {"request": request})
+
+@app.get("/database", response_class=HTMLResponse)
+async def database_view(request: Request):
+    db = get_db()
+    tasks = db.query(Task).all()
+    events = db.query(Event).all()
+    notes = db.query(Note).all()
+    return templates.TemplateResponse("database.html", {
+        "request": request,
+        "tasks": tasks,
+        "events": events,
+        "notes": notes
+    })
+
+@app.get("/architecture", response_class=HTMLResponse)
+async def architecture_view(request: Request):
+    return templates.TemplateResponse("architecture.html", {"request": request})
+
+@app.websocket("/ws/chat")
+async def chat_websocket(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            user_input = message.get("message", "")
+            
+            # Send agent status
+            await websocket.send_json({"type": "status", "active_agents": ["Primary"]})
+            
+            # Process with primary agent
+            response = await primary_agent.process_request(user_input, websocket)
+            
+            await websocket.send_json({"type": "response", "content": response})
+    except Exception as e:
+        await websocket.send_json({"type": "error", "content": str(e)})
+    finally:
+        await websocket.close()
+
+@app.post("/api/chat")
+async def chat_api(request: Request):
+    data = await request.json()
+    user_input = data.get("message", "")
+    response = await primary_agent.process_request(user_input)
+    return {"response": response}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
